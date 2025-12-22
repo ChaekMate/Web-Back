@@ -18,11 +18,13 @@ from app.schemas.book import (
 )
 
 __all__ = [
+    # Auth
     "SignupRequest",
     "SignupResponse", 
     "LoginRequest",
     "TokenResponse",
     "UserResponse",
+    # Book
     "BookBase",
     "BookDetail",
     "BookResponse",
