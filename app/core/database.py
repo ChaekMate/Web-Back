@@ -1,3 +1,8 @@
+"""
+데이터베이스 설정 및 세션 관리
+SQLAlchemy + PostgreSQL
+"""
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -6,8 +11,8 @@ from app.core.config import settings
 # SQLAlchemy 엔진 생성
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,  # 연결 확인
-    echo=settings.DEBUG,  # SQL 쿼리 로깅 (개발 시)
+    pool_pre_ping=True,
+    echo=settings.DEBUG,
 )
 
 # 세션 로컬 생성
@@ -32,3 +37,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# 데이터베이스 초기화 함수
+def init_db():
+    """
+    데이터베이스 테이블 생성
+    """
+    # 모든 모델 import (테이블 생성을 위해)
+    from app.models.user import User
+    from app.models.book import Book
+    
+    # 테이블 생성
+    Base.metadata.create_all(bind=engine)
