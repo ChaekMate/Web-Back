@@ -1,3 +1,8 @@
+"""
+애플리케이션 설정
+환경변수 기반 설정 관리
+"""
+
 from pydantic_settings import BaseSettings
 from typing import List
 
@@ -16,11 +21,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-    ]
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000"
     
     # 데이터베이스
     DATABASE_URL: str
@@ -41,12 +42,18 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     
     # 파일 업로드
-    MAX_FILE_SIZE: int = 10485760  # 10MB
+    MAX_FILE_SIZE: int = 10485760
     UPLOAD_DIR: str = "uploads/"
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """CORS origins를 리스트로 변환"""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
     
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 # 설정 인스턴스 생성
