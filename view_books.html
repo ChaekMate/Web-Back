@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChaekMate - 도서 목록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            border-color: #2196F3;
+            color: #2196F3;
+        }
+        
+        .filter-btn.active {
+            background: #2196F3;
+            color: white;
+            border-color: #2196F3;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        
+        .book-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f0f0f0;
+        }
+        
+        .book-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #333;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 40px;
+        }
+        
+        .book-author {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .book-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .book-price {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .book-theme {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .theme-work {
+            background: #E3F2FD;
+            color: #1976D2;
+        }
+        
+        .theme-healing {
+            background: #E8F5E9;
+            color: #388E3C;
+        }
+        
+        .theme-growth {
+            background: #FFF3E0;
+            color: #F57C00;
+        }
+        
+        .book-badges {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .badge-popular {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+        
+        .badge-curator {
+            background: #F3E5F5;
+            color: #7B1FA2;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 ChaekMate 도서 목록</h1>
+        
+        <div class="stats">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">전체 도서</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="workCount">0</div>
+                    <div class="stat-label">업무 테마</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="healingCount">0</div>
+                    <div class="stat-label">힐링 테마</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="growthCount">0</div>
+                    <div class="stat-label">성장 테마</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="popularCount">0</div>
+                    <div class="stat-label">인기 도서</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="curatorCount">0</div>
+                    <div class="stat-label">큐레이터 추천</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterBooks('all')">전체</button>
+                <button class="filter-btn" onclick="filterBooks('work')">💼 업무</button>
+                <button class="filter-btn" onclick="filterBooks('healing')">🌿 힐링</button>
+                <button class="filter-btn" onclick="filterBooks('growth')">🌱 성장</button>
+                <button class="filter-btn" onclick="filterBooks('popular')">🔥 인기</button>
+                <button class="filter-btn" onclick="filterBooks('curator')">⭐ 큐레이터 추천</button>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">도서 목록을 불러오는 중...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="books" class="books-grid"></div>
+    </div>
+
+    <script>
+        let allBooks = [];
+        let currentFilter = 'all';
+
+        // 페이지 로드 시 도서 목록 가져오기
+        async function loadBooks() {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/books/all');
+                
+                if (!response.ok) {
+                    throw new Error('도서 목록을 불러올 수 없습니다.');
+                }
+                
+                const data = await response.json();
+                allBooks = data.data || [];
+                
+                updateStats();
+                displayBooks(allBooks);
+                
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = '❌ ' + error.message + '\n\n서버가 실행 중인지 확인해주세요.';
+            }
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allBooks.length;
+            document.getElementById('workCount').textContent = allBooks.filter(b => b.theme === 'work').length;
+            document.getElementById('healingCount').textContent = allBooks.filter(b => b.theme === 'healing').length;
+            document.getElementById('growthCount').textContent = allBooks.filter(b => b.theme === 'growth').length;
+            document.getElementById('popularCount').textContent = allBooks.filter(b => b.is_popular).length;
+            document.getElementById('curatorCount').textContent = allBooks.filter(b => b.is_curator_pick).length;
+        }
+
+        // 도서 목록 표시
+        function displayBooks(books) {
+            const container = document.getElementById('books');
+            
+            if (books.length === 0) {
+                container.innerHTML = '<div class="loading">도서가 없습니다.</div>';
+                return;
+            }
+            
+            container.innerHTML = books.map(book => `
+                <div class="book-card">
+                    <img 
+                        src="${book.cover_image || 'https://via.placeholder.com/200x280?text=No+Image'}" 
+                        alt="${book.title}"
+                        class="book-image"
+                        onerror="this.src='https://via.placeholder.com/200x280?text=No+Image'"
+                    >
+                    <div class="book-title">${book.title}</div>
+                    <div class="book-author">${book.author}</div>
+                    <div class="book-meta">
+                        <span class="book-price">${book.price ? book.price.toLocaleString() + '원' : '-'}</span>
+                        <span class="book-theme theme-${book.theme}">${getThemeText(book.theme)}</span>
+                    </div>
+                    ${book.is_popular || book.is_curator_pick ? `
+                        <div class="book-badges">
+                            ${book.is_popular ? '<span class="badge badge-popular">인기</span>' : ''}
+                            ${book.is_curator_pick ? '<span class="badge badge-curator">큐레이터 추천</span>' : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // 테마 텍스트 변환
+        function getThemeText(theme) {
+            const themeMap = {
+                'work': '업무',
+                'healing': '힐링',
+                'growth': '성장'
+            };
+            return themeMap[theme] || theme;
+        }
+
+        // 필터링
+        function filterBooks(filter) {
+            currentFilter = filter;
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 필터링
+            let filtered = allBooks;
+            
+            if (filter === 'work' || filter === 'healing' || filter === 'growth') {
+                filtered = allBooks.filter(book => book.theme === filter);
+            } else if (filter === 'popular') {
+                filtered = allBooks.filter(book => book.is_popular);
+            } else if (filter === 'curator') {
+                filtered = allBooks.filter(book => book.is_curator_pick);
+            }
+            
+            displayBooks(filtered);
+        }
+
+        // 페이지 로드 시 실행
+        loadBooks();
+    </script>
+</body>
+</html>

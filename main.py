@@ -10,6 +10,7 @@ from app.core.database import init_db
 
 # 라우터 import
 from app.api.v1 import auth
+from app.api.v1 import auth, books
 
 # FastAPI 앱 생성
 app = FastAPI(
@@ -23,7 +24,7 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +56,7 @@ async def health_check():
 
 # 라우터 등록
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["인증"])
-
+app.include_router(books.router, prefix=f"{settings.API_V1_PREFIX}/books", tags=["도서"])
 
 if __name__ == "__main__":
     import uvicorn

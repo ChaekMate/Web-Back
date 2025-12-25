@@ -1,8 +1,3 @@
-"""
-애플리케이션 설정
-환경변수 기반 설정 관리
-"""
-
 from pydantic_settings import BaseSettings
 from typing import List
 
@@ -40,6 +35,10 @@ class Settings(BaseSettings):
     
     # Anthropic Claude API (향후 사용)
     ANTHROPIC_API_KEY: str = ""
+    
+    # Naver Book Search API
+    NAVER_CLIENT_ID: str = ""
+    NAVER_CLIENT_SECRET: str = ""
     
     # 파일 업로드
     MAX_FILE_SIZE: int = 10485760
