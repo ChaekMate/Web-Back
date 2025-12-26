@@ -1,3 +1,7 @@
+"""
+도서 API 엔드포인트
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
@@ -100,5 +104,30 @@ def get_curator_picks(
     
     return {
         "success": True,
+        "data": [serialize_book(book) for book in books]
+    }
+
+
+@router.get("/search")
+def search_books(
+    q: str = Query(..., description="검색 키워드"),
+    limit: int = Query(default=20, ge=1, le=100, description="조회할 도서 개수"),
+    offset: int = Query(default=0, ge=0, description="건너뛸 개수"),
+    db: Session = Depends(get_db)
+):
+    """
+    도서 검색
+    
+    - **q**: 검색 키워드 (제목, 저자, 출판사 검색)
+    - **limit**: 조회할 도서 개수 (기본값: 20, 최대: 100)
+    - **offset**: 건너뛸 개수 (페이지네이션용, 기본값: 0)
+    """
+    books, total = BookService.search_books(db, q, limit, offset)
+    
+    return {
+        "success": True,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
         "data": [serialize_book(book) for book in books]
     }
