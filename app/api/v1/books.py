@@ -9,6 +9,7 @@ from typing import List
 from app.core.database import get_db
 from app.models.book import Book
 from app.services.book_service import BookService
+from app.schemas.compare import BookCompareRequest
 
 router = APIRouter()
 
@@ -28,9 +29,7 @@ def serialize_book(book: Book) -> dict:
         "description": book.description,
         "price": book.price,
         "rating": book.rating,
-        "review_count": book.review_count,
         "theme": book.theme,
-        "category": book.category,
         "is_popular": book.is_popular,
         "is_curator_pick": book.is_curator_pick,
         "published_date": str(book.published_date) if book.published_date else None,
@@ -158,4 +157,50 @@ def get_book_detail(
     return {
         "success": True,
         "data": serialize_book(book)
+    }
+
+
+@router.post("/compare")
+def compare_books(
+    request: BookCompareRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    도서 비교
+    
+    - **book_ids**: 비교할 도서 ID 리스트 (2~3개)
+    """
+    books = BookService.compare_books(db, request.book_ids)
+    
+    # 존재하지 않는 ID 확인
+    found_ids = {book.id for book in books}
+    not_found_ids = [book_id for book_id in request.book_ids if book_id not in found_ids]
+    
+    if len(books) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail=f"At least 2 books must be found. Not found IDs: {not_found_ids}"
+        )
+    
+    # 비교 데이터 생성
+    books_data = [serialize_book(book) for book in books]
+    
+    # 비교 요약
+    prices = [book.price for book in books if book.price]
+    ratings = [book.rating for book in books if book.rating]
+    
+    comparison_summary = {
+        "lowest_price": min(prices) if prices else None,
+        "highest_price": max(prices) if prices else None,
+        "average_price": sum(prices) // len(prices) if prices else None,
+        "highest_rating": max(ratings) if ratings else None,
+        "lowest_rating": min(ratings) if ratings else None,
+        "average_rating": round(sum(ratings) / len(ratings), 2) if ratings else None
+    }
+    
+    return {
+        "success": True,
+        "comparison_summary": comparison_summary,
+        "books": books_data,
+        "not_found_ids": not_found_ids if not_found_ids else []
     }
