@@ -4,7 +4,7 @@
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from typing import List
+from typing import List, Optional
 from app.models.book import Book
 
 
@@ -104,3 +104,17 @@ class BookService:
             .all()
         
         return books, total
+    
+    @staticmethod
+    def get_book_by_id(db: Session, book_id: int) -> Optional[Book]:
+        """
+        ID로 도서 상세 조회
+        
+        Args:
+            db: 데이터베이스 세션
+            book_id: 도서 ID
+            
+        Returns:
+            Book 객체 또는 None
+        """
+        return db.query(Book).filter(Book.id == book_id).first()

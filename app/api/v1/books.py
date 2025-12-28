@@ -28,9 +28,13 @@ def serialize_book(book: Book) -> dict:
         "description": book.description,
         "price": book.price,
         "rating": book.rating,
+        "review_count": book.review_count,
         "theme": book.theme,
+        "category": book.category,
         "is_popular": book.is_popular,
-        "is_curator_pick": book.is_curator_pick
+        "is_curator_pick": book.is_curator_pick,
+        "published_date": str(book.published_date) if book.published_date else None,
+        "page_count": book.page_count
     }
 
 
@@ -130,4 +134,28 @@ def search_books(
         "limit": limit,
         "offset": offset,
         "data": [serialize_book(book) for book in books]
+    }
+
+
+@router.get("/{book_id}")
+def get_book_detail(
+    book_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    도서 상세 조회
+    
+    - **book_id**: 도서 ID
+    """
+    book = BookService.get_book_by_id(db, book_id)
+    
+    if not book:
+        raise HTTPException(
+            status_code=404,
+            detail="Book not found"
+        )
+    
+    return {
+        "success": True,
+        "data": serialize_book(book)
     }
