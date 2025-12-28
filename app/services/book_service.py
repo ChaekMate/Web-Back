@@ -118,3 +118,21 @@ class BookService:
             Book 객체 또는 None
         """
         return db.query(Book).filter(Book.id == book_id).first()
+    
+    @staticmethod
+    def compare_books(db: Session, book_ids: List[int]) -> List[Book]:
+        """
+        도서 비교
+        
+        Args:
+            db: 데이터베이스 세션
+            book_ids: 비교할 도서 ID 리스트
+            
+        Returns:
+            도서 목록 (존재하는 도서만)
+        """
+        books = db.query(Book).filter(Book.id.in_(book_ids)).all()
+        
+        # 요청한 순서대로 정렬
+        book_dict = {book.id: book for book in books}
+        return [book_dict[book_id] for book_id in book_ids if book_id in book_dict]
