@@ -11,6 +11,7 @@ from app.core.database import init_db
 # 라우터 import
 from app.api.v1 import auth
 from app.api.v1 import auth, books
+from app.api.v1 import auth, books, recommendations
 
 # FastAPI 앱 생성
 app = FastAPI(
@@ -57,6 +58,7 @@ async def health_check():
 # 라우터 등록
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["인증"])
 app.include_router(books.router, prefix=f"{settings.API_V1_PREFIX}/books", tags=["도서"])
+app.include_router(recommendations.router, prefix=f"{settings.API_V1_PREFIX}/recommendations", tags=["AI 추천"])
 
 if __name__ == "__main__":
     import uvicorn
