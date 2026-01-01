@@ -1,95 +1,54 @@
-from datetime import datetime, timedelta
-from typing import Optional
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from app.core.config import settings
+"""
+보안 관련 유틸리티
+"""
 
-# 비밀번호 해싱 컨텍스트
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from datetime import datetime, timedelta
+from jose import jwt
+import bcrypt
+from app.core.config import settings
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     비밀번호 검증
-    
-    Args:
-        plain_password: 평문 비밀번호
-        hashed_password: 해시된 비밀번호
-        
-    Returns:
-        bool: 일치 여부
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'),
+        hashed_password.encode('utf-8')
+    )
 
 
 def get_password_hash(password: str) -> str:
     """
     비밀번호 해싱
-    
-    Args:
-        password: 평문 비밀번호
-        
-    Returns:
-        str: 해시된 비밀번호
     """
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta = None):
     """
-    Access Token 생성
-    
-    Args:
-        data: 토큰에 포함할 데이터 (주로 user_id)
-        expires_delta: 만료 시간 (기본값: 30분)
-        
-    Returns:
-        str: JWT 토큰
+    액세스 토큰 생성
     """
     to_encode = data.copy()
-    
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire, "type": "access"})
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    
     return encoded_jwt
 
 
-def create_refresh_token(data: dict) -> str:
+def create_refresh_token(data: dict):
     """
-    Refresh Token 생성
-    
-    Args:
-        data: 토큰에 포함할 데이터
-        
-    Returns:
-        str: JWT Refresh 토큰
+    리프레시 토큰 생성
     """
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    
     return encoded_jwt
-
-
-def decode_token(token: str) -> Optional[dict]:
-    """
-    JWT 토큰 디코딩
-    
-    Args:
-        token: JWT 토큰
-        
-    Returns:
-        dict: 디코딩된 페이로드 또는 None
-    """
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return payload
-    except JWTError:
-        return None
